@@ -18,7 +18,6 @@ jobs:
         run: |
           gem install xcpretty --quiet
           brew install xcodegen
-          brew install chargepoint/xcparse/xcparse
 
       - name: Generate Xcode project
         run: xcodegen generate
@@ -66,18 +65,16 @@ jobs:
         # Continue even if tests fail so we still get whatever screenshots were taken
         continue-on-error: true
 
-      - name: Extract screenshots
+      - name: List screenshots
         run: |
-          mkdir -p screenshots
-          xcparse screenshots TestResults.xcresult screenshots/
-          echo "--- Screenshots extracted ---"
-          find screenshots -name "*.png" | sort
+          echo "--- Screenshots written by tests ---"
+          find /tmp/atlas-screenshots -name "*.png" 2>/dev/null | sort || echo "(none)"
 
       - name: Upload screenshots
         uses: actions/upload-artifact@v4
         with:
           name: atlas-screenshots
-          path: screenshots/
+          path: /tmp/atlas-screenshots/
           retention-days: 30
           if-no-files-found: warn
 
