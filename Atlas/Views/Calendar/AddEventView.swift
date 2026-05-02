@@ -66,6 +66,7 @@ struct AddEventView: View {
                             }
                         }
                         .pickerStyle(.segmented)
+                        .accessibilityIdentifier("categoryPicker")
                     }
                 }
 
@@ -166,6 +167,7 @@ struct AddEventView: View {
                 }
             }
             .pickerStyle(.segmented)
+            .accessibilityIdentifier("workTypePicker")
         }
 
         if workSubType == .basketball {
@@ -222,6 +224,7 @@ struct AddEventView: View {
             } else {
                 Section("Time") {
                     DatePicker("Time", selection: $time, displayedComponents: .hourAndMinute)
+                        .accessibilityIdentifier("timePicker")
                 }
             }
         case .other:

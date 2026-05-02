@@ -82,6 +82,7 @@ struct CalendarView: View {
                     .font(.title2)
                     .foregroundColor(AppColors.accent)
             }
+            .accessibilityLabel("Add Event")
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)

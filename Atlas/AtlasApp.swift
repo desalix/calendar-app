@@ -16,6 +16,9 @@ struct AtlasApp: App {
             ])
             modelContainer = try ModelContainer(for: schema)
             seedIfNeeded(context: modelContainer.mainContext)
+            if CommandLine.arguments.contains("--UITesting") {
+                resetForUITesting(context: modelContainer.mainContext)
+            }
         } catch {
             fatalError("SwiftData container failed: \(error)")
         }
@@ -60,6 +63,17 @@ struct AtlasApp: App {
             for index in 0..<3 {
                 context.insert(NotificationConfig(eventType: eventType, reminderIndex: index))
             }
+        }
+        try? context.save()
+    }
+
+    private func resetForUITesting(context: ModelContext) {
+        // Start with a clean slate so screenshots are deterministic
+        if let events = try? context.fetch(FetchDescriptor<Event>()) {
+            events.forEach { context.delete($0) }
+        }
+        if let messages = try? context.fetch(FetchDescriptor<ChatMessage>()) {
+            messages.forEach { context.delete($0) }
         }
         try? context.save()
     }
