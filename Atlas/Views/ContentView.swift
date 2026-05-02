@@ -16,8 +16,7 @@ struct ContentView: View {
                 .tabItem { Label("Settings", systemImage: "gearshape") }
         }
         .tint(AppColors.accent)
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            Divider()
-        }
+        .toolbarBackground(Color(UIColor.secondarySystemBackground), for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
     }
 }

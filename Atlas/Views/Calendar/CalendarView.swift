@@ -11,41 +11,38 @@ struct CalendarView: View {
     private let weekHeaders = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                header
-                weekdayRow
-                Divider()
+        VStack(spacing: 0) {
+            header
+            weekdayRow
+            Divider()
 
-                let days = vm.daysInMonth()
-                let rowCount = max(1, days.count / 7)
+            let days = vm.daysInMonth()
+            let rowCount = max(1, days.count / 7)
 
-                VStack(spacing: 1) {
-                    ForEach(0..<rowCount, id: \.self) { row in
-                        HStack(spacing: 1) {
-                            ForEach(0..<7, id: \.self) { col in
-                                let idx = row * 7 + col
-                                if idx < days.count, let date = days[idx] {
-                                    DayCellView(
-                                        date: date,
-                                        events: vm.events(for: date, from: allEvents),
-                                        isToday: Calendar.current.isDateInToday(date),
-                                        onTapEvent: { vm.selectedEvent = $0 },
-                                        onTapDay: { vm.selectedDate = $0; vm.showingAddEvent = true }
-                                    )
-                                } else {
-                                    Color(UIColor.systemGroupedBackground)
-                                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                }
+            VStack(spacing: 1) {
+                ForEach(0..<rowCount, id: \.self) { row in
+                    HStack(spacing: 1) {
+                        ForEach(0..<7, id: \.self) { col in
+                            let idx = row * 7 + col
+                            if idx < days.count, let date = days[idx] {
+                                DayCellView(
+                                    date: date,
+                                    events: vm.events(for: date, from: allEvents),
+                                    isToday: Calendar.current.isDateInToday(date),
+                                    onTapEvent: { vm.selectedEvent = $0 },
+                                    onTapDay: { vm.selectedDate = $0; vm.showingAddEvent = true }
+                                )
+                            } else {
+                                Color(UIColor.systemGroupedBackground)
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                             }
                         }
-                        .frame(maxHeight: .infinity)
                     }
+                    .frame(maxHeight: .infinity)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color(UIColor.separator).opacity(0.3))
             }
-            .navigationBarHidden(true)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color(UIColor.separator).opacity(0.3))
         }
         .sheet(isPresented: $vm.showingAddEvent) {
             AddEventView(initialDate: vm.selectedDate ?? Date())
