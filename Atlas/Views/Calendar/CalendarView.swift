@@ -21,7 +21,7 @@ struct CalendarView: View {
                 GeometryReader { geo in
                     let days = vm.daysInMonth()
                     let rowCount = max(1, days.count / 7)
-                    let cellHeight = geo.size.height / CGFloat(rowCount)
+                    let cellHeight = (geo.size.height - CGFloat(rowCount - 1)) / CGFloat(rowCount)
 
                     LazyVGrid(columns: columns, spacing: 1) {
                         ForEach(Array(days.enumerated()), id: \.offset) { _, maybeDate in
