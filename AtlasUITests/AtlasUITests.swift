@@ -52,6 +52,10 @@ final class AtlasUITests: XCTestCase {
         btn.tap()
     }
 
+    private func pause(_ seconds: TimeInterval) {
+        Thread.sleep(forTimeInterval: seconds)
+    }
+
     private func setTimePicker(hour12: String, minute: String, ampm: String) {
         let timePicker = app.datePickers["timePicker"]
         guard timePicker.waitForExistence(timeout: 3) else { return }
@@ -62,18 +66,18 @@ final class AtlasUITests: XCTestCase {
         if wheels.count >= 3 {
             // 12-hour (H, MM, AM/PM)
             wheels[0].adjust(toPickerWheelValue: hour12)
-            sleep(0.2)
+            pause(0.2)
             wheels[1].adjust(toPickerWheelValue: minute)
-            sleep(0.2)
+            pause(0.2)
             wheels[2].adjust(toPickerWheelValue: ampm)
-            sleep(0.2)
+            pause(0.2)
         } else if wheels.count == 2 {
             // 24-hour
             let h = Int(hour12)! + (ampm == "PM" ? 12 : 0)
             wheels[0].adjust(toPickerWheelValue: String(h))
-            sleep(0.2)
+            pause(0.2)
             wheels[1].adjust(toPickerWheelValue: minute)
-            sleep(0.2)
+            pause(0.2)
         }
 
         // Dismiss inline picker — try "Done", then tap a neutral spot
@@ -82,7 +86,7 @@ final class AtlasUITests: XCTestCase {
         } else {
             app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15)).tap()
         }
-        sleep(0.5)
+        pause(0.5)
     }
 
     // MARK: - Full journey
@@ -104,7 +108,7 @@ final class AtlasUITests: XCTestCase {
 
         // ── 2. Open Add Event form ────────────────────────────────────────
 
-        app.tabBars.buttons["Calendar"].tap(); sleep(0.5)
+        app.tabBars.buttons["Calendar"].tap(); pause(0.5)
         tap("Add Event")
         sleep(1)
         snap("05-add-event-form-open")
@@ -114,13 +118,13 @@ final class AtlasUITests: XCTestCase {
         // Category picker: School | Work | Other
         let catPicker = app.segmentedControls["categoryPicker"]
         if catPicker.waitForExistence(timeout: 3) {
-            catPicker.buttons["Work"].tap(); sleep(0.5)
+            catPicker.buttons["Work"].tap(); pause(0.5)
         }
 
         // Work type picker: Basketball | Football | Event
         let typePicker = app.segmentedControls["workTypePicker"]
         if typePicker.waitForExistence(timeout: 3) {
-            typePicker.buttons["Basketball"].tap(); sleep(0.3)
+            typePicker.buttons["Basketball"].tap(); pause(0.3)
         }
 
         // ── 4. Time → 18:45 ──────────────────────────────────────────────
@@ -130,18 +134,18 @@ final class AtlasUITests: XCTestCase {
         // ── 5. Ropero + Postres tags ──────────────────────────────────────
 
         // Scroll down to reveal the Tags section
-        app.swipeUp(); sleep(0.4)
+        app.swipeUp(); pause(0.4)
 
         let ropero = app.switches["Ropero"]
-        if ropero.waitForExistence(timeout: 3) { ropero.tap(); sleep(0.2) }
+        if ropero.waitForExistence(timeout: 3) { ropero.tap(); pause(0.2) }
 
         let postres = app.switches["Postres"]
-        if postres.waitForExistence(timeout: 3) { postres.tap(); sleep(0.2) }
+        if postres.waitForExistence(timeout: 3) { postres.tap(); pause(0.2) }
 
         snap("06-form-tags-on")
 
         // Scroll back up so time + type are visible in the same frame
-        app.swipeDown(); sleep(0.3)
+        app.swipeDown(); pause(0.3)
         snap("07-form-basketball-complete")
 
         // ── 6. Add the event ─────────────────────────────────────────────
@@ -168,9 +172,9 @@ final class AtlasUITests: XCTestCase {
         }
         if !input.exists { input = app.textViews.firstMatch }
 
-        input.tap(); sleep(0.5)
+        input.tap(); pause(0.5)
         input.typeText("What events do I have this week?")
-        sleep(0.3)
+        pause(0.3)
         snap("10-chat-typing")
 
         tap("Send")
@@ -179,7 +183,7 @@ final class AtlasUITests: XCTestCase {
 
         // ── 9. Calendar — final view ─────────────────────────────────────
 
-        app.tabBars.buttons["Calendar"].tap(); sleep(0.5)
+        app.tabBars.buttons["Calendar"].tap(); pause(0.5)
         snap("12-calendar-final")
     }
 }
