@@ -181,6 +181,12 @@ final class AtlasUITests: XCTestCase {
         sleep(4)   // stub delay 0.6 s + UI render
         snap("11-chat-response")
 
+        // Dismiss keyboard before switching tabs (otherwise tab bar tap fails)
+        if app.keyboards.count > 0 {
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3)).tap()
+            pause(0.5)
+        }
+
         // ── 9. Calendar — final view ─────────────────────────────────────
 
         app.tabBars.buttons["Calendar"].tap(); pause(0.5)
