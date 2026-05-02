@@ -18,9 +18,13 @@ struct CalendarView: View {
                 weekdayRow
                 Divider()
 
-                ScrollView {
+                GeometryReader { geo in
+                    let days = vm.daysInMonth()
+                    let rowCount = max(1, days.count / 7)
+                    let cellHeight = geo.size.height / CGFloat(rowCount)
+
                     LazyVGrid(columns: columns, spacing: 1) {
-                        ForEach(Array(vm.daysInMonth().enumerated()), id: \.offset) { _, maybeDate in
+                        ForEach(Array(days.enumerated()), id: \.offset) { _, maybeDate in
                             if let date = maybeDate {
                                 DayCellView(
                                     date: date,
@@ -29,9 +33,10 @@ struct CalendarView: View {
                                     onTapEvent: { vm.selectedEvent = $0 },
                                     onTapDay: { vm.selectedDate = $0; vm.showingAddEvent = true }
                                 )
+                                .frame(height: cellHeight)
                             } else {
                                 Color(UIColor.systemGroupedBackground)
-                                    .frame(minHeight: 80)
+                                    .frame(height: cellHeight)
                             }
                         }
                     }
@@ -43,9 +48,11 @@ struct CalendarView: View {
         }
         .sheet(isPresented: $vm.showingAddEvent) {
             AddEventView(initialDate: vm.selectedDate ?? Date())
+                .interactiveDismissDisabled()
         }
         .sheet(item: $vm.selectedEvent) { event in
             EventDetailView(event: event)
+                .interactiveDismissDisabled()
         }
     }
 
