@@ -33,14 +33,11 @@ final class AtlasUITests: XCTestCase {
     private func snap(_ name: String) {
         let sc = XCUIScreen.main.screenshot()
 
-        // 1. XCTAttachment (stored in xcresult)
         let att = XCTAttachment(screenshot: sc)
         att.name = name
         att.lifetime = .keepAlways
         add(att)
 
-        // 2. Write PNG directly to disk so the workflow can upload it
-        //    even if xcresult parsing fails.
         let path = "\(screenshotDir)/\(name).png"
         try? sc.pngRepresentation.write(to: URL(fileURLWithPath: path))
     }
@@ -50,6 +47,13 @@ final class AtlasUITests: XCTestCase {
         let btn = app.buttons[label]
         guard btn.waitForExistence(timeout: timeout) else { return }
         btn.tap()
+    }
+
+    // Tab bar tap via synthesized coordinate — avoids AXScrollToVisibleAction failures.
+    private func tapTab(_ label: String) {
+        let btn = app.tabBars.firstMatch.buttons[label]
+        guard btn.waitForExistence(timeout: 3) else { return }
+        btn.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
     }
 
     private func pause(_ seconds: TimeInterval) {
@@ -97,31 +101,29 @@ final class AtlasUITests: XCTestCase {
 
         snap("01-calendar-tab-empty")
 
-        app.tabBars.buttons["Chat"].tap(); sleep(1)
+        tapTab("Chat"); sleep(1)
         snap("02-chat-tab-empty")
 
-        app.tabBars.buttons["Income"].tap(); sleep(1)
+        tapTab("Income"); sleep(1)
         snap("03-income-tab-empty")
 
-        app.tabBars.buttons["Settings"].tap(); sleep(1)
+        tapTab("Settings"); sleep(1)
         snap("04-settings-tab")
 
         // ── 2. Open Add Event form ────────────────────────────────────────
 
-        app.tabBars.buttons["Calendar"].tap(); pause(0.5)
+        tapTab("Calendar"); pause(0.5)
         tap("Add Event")
         sleep(1)
         snap("05-add-event-form-open")
 
         // ── 3. Work → Basketball ──────────────────────────────────────────
 
-        // Category picker: School | Work | Other
         let catPicker = app.segmentedControls["categoryPicker"]
         if catPicker.waitForExistence(timeout: 3) {
             catPicker.buttons["Work"].tap(); pause(0.5)
         }
 
-        // Work type picker: Basketball | Football | Event
         let typePicker = app.segmentedControls["workTypePicker"]
         if typePicker.waitForExistence(timeout: 3) {
             typePicker.buttons["Basketball"].tap(); pause(0.3)
@@ -133,7 +135,6 @@ final class AtlasUITests: XCTestCase {
 
         // ── 5. Ropero + Postres tags ──────────────────────────────────────
 
-        // Scroll down to reveal the Tags section
         app.swipeUp(); pause(0.4)
 
         let ropero = app.switches["Ropero"]
@@ -144,28 +145,25 @@ final class AtlasUITests: XCTestCase {
 
         snap("06-form-tags-on")
 
-        // Scroll back up so time + type are visible in the same frame
         app.swipeDown(); pause(0.3)
         snap("07-form-basketball-complete")
 
         // ── 6. Add the event ─────────────────────────────────────────────
 
-        // The "Add" button sits in the navigation bar toolbar
         let addBtn = app.navigationBars.buttons["Add"]
         if addBtn.waitForExistence(timeout: 3) { addBtn.tap() }
         sleep(1)
         snap("08-calendar-with-event")
 
-        // ── 7. Income — shows the basketball entry (40 €) ────────────────
+        // ── 7. Income — shows the basketball entry ────────────────────────
 
-        app.tabBars.buttons["Income"].tap(); sleep(1)
+        tapTab("Income"); sleep(1)
         snap("09-income-with-entry")
 
         // ── 8. Chat — type and send a message ────────────────────────────
 
-        app.tabBars.buttons["Chat"].tap(); sleep(1)
+        tapTab("Chat"); sleep(1)
 
-        // SwiftUI TextField(axis:.vertical) can surface as textField or textView
         var input = app.textFields["messageInput"]
         if !input.waitForExistence(timeout: 2) {
             input = app.textViews["messageInput"]
@@ -178,18 +176,12 @@ final class AtlasUITests: XCTestCase {
         snap("10-chat-typing")
 
         tap("Send")
-        sleep(4)   // stub delay 0.6 s + UI render
+        sleep(4)
         snap("11-chat-response")
-
-        // Dismiss keyboard before switching tabs (otherwise tab bar tap fails)
-        if app.keyboards.count > 0 {
-            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3)).tap()
-            pause(0.5)
-        }
 
         // ── 9. Calendar — final view ─────────────────────────────────────
 
-        app.tabBars.buttons["Calendar"].tap(); pause(0.5)
+        tapTab("Calendar"); pause(0.5)
         snap("12-calendar-final")
     }
 }
