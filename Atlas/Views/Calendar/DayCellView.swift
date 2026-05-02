@@ -48,7 +48,7 @@ struct DayCellView: View {
 
             Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity, minHeight: 80)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.white)
         .contentShape(Rectangle())
         .onTapGesture { onTapDay(date) }

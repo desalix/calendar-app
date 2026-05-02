@@ -16,5 +16,8 @@ struct ContentView: View {
                 .tabItem { Label("Settings", systemImage: "gearshape") }
         }
         .tint(AppColors.accent)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            Divider()
+        }
     }
 }

@@ -9,7 +9,6 @@ struct CalendarView: View {
     @State private var vm = CalendarViewModel()
 
     private let weekHeaders = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 1), count: 7)
 
     var body: some View {
         NavigationStack {
@@ -18,31 +17,33 @@ struct CalendarView: View {
                 weekdayRow
                 Divider()
 
-                GeometryReader { geo in
-                    let days = vm.daysInMonth()
-                    let rowCount = max(1, days.count / 7)
-                    let cellHeight = (geo.size.height - CGFloat(rowCount - 1)) / CGFloat(rowCount)
+                let days = vm.daysInMonth()
+                let rowCount = max(1, days.count / 7)
 
-                    LazyVGrid(columns: columns, spacing: 1) {
-                        ForEach(Array(days.enumerated()), id: \.offset) { _, maybeDate in
-                            if let date = maybeDate {
-                                DayCellView(
-                                    date: date,
-                                    events: vm.events(for: date, from: allEvents),
-                                    isToday: Calendar.current.isDateInToday(date),
-                                    onTapEvent: { vm.selectedEvent = $0 },
-                                    onTapDay: { vm.selectedDate = $0; vm.showingAddEvent = true }
-                                )
-                                .frame(height: cellHeight)
-                            } else {
-                                Color(UIColor.systemGroupedBackground)
-                                    .frame(height: cellHeight)
+                VStack(spacing: 1) {
+                    ForEach(0..<rowCount, id: \.self) { row in
+                        HStack(spacing: 1) {
+                            ForEach(0..<7, id: \.self) { col in
+                                let idx = row * 7 + col
+                                if idx < days.count, let date = days[idx] {
+                                    DayCellView(
+                                        date: date,
+                                        events: vm.events(for: date, from: allEvents),
+                                        isToday: Calendar.current.isDateInToday(date),
+                                        onTapEvent: { vm.selectedEvent = $0 },
+                                        onTapDay: { vm.selectedDate = $0; vm.showingAddEvent = true }
+                                    )
+                                } else {
+                                    Color(UIColor.systemGroupedBackground)
+                                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                }
                             }
                         }
+                        .frame(maxHeight: .infinity)
                     }
-                    .background(Color(UIColor.separator).opacity(0.3))
                 }
-                .background(AppColors.background)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color(UIColor.separator).opacity(0.3))
             }
             .navigationBarHidden(true)
         }
@@ -65,7 +66,6 @@ struct CalendarView: View {
 
             Spacer()
 
-            // Month navigation
             HStack(spacing: 6) {
                 navButton(systemImage: "chevron.left", enabled: vm.canGoBack) {
                     vm.goToPreviousMonth()
@@ -80,7 +80,6 @@ struct CalendarView: View {
 
             Spacer()
 
-            // Add button
             Button {
                 vm.selectedDate = nil
                 vm.showingAddEvent = true
@@ -119,3 +118,4 @@ struct CalendarView: View {
         .disabled(!enabled)
     }
 }
+
