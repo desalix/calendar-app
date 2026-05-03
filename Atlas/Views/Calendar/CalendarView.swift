@@ -9,19 +9,22 @@ struct CalendarView: View {
     @State private var vm = CalendarViewModel()
 
     private let weekHeaders = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 1), count: 7)
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                header
-                weekdayRow
-                Divider()
+        VStack(spacing: 0) {
+            header
+            weekdayRow
+            Divider()
 
-                ScrollView {
-                    LazyVGrid(columns: columns, spacing: 1) {
-                        ForEach(Array(vm.daysInMonth().enumerated()), id: \.offset) { _, maybeDate in
-                            if let date = maybeDate {
+            let days = vm.daysInMonth()
+            let rowCount = max(1, days.count / 7)
+
+            VStack(spacing: 1) {
+                ForEach(0..<rowCount, id: \.self) { row in
+                    HStack(spacing: 1) {
+                        ForEach(0..<7, id: \.self) { col in
+                            let idx = row * 7 + col
+                            if idx < days.count, let date = days[idx] {
                                 DayCellView(
                                     date: date,
                                     events: vm.events(for: date, from: allEvents),
@@ -31,21 +34,23 @@ struct CalendarView: View {
                                 )
                             } else {
                                 Color(UIColor.systemGroupedBackground)
-                                    .frame(minHeight: 80)
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                             }
                         }
                     }
-                    .background(Color(UIColor.separator).opacity(0.3))
+                    .frame(maxHeight: .infinity)
                 }
-                .background(AppColors.background)
             }
-            .navigationBarHidden(true)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color(UIColor.separator).opacity(0.3))
         }
         .sheet(isPresented: $vm.showingAddEvent) {
             AddEventView(initialDate: vm.selectedDate ?? Date())
+                .interactiveDismissDisabled()
         }
         .sheet(item: $vm.selectedEvent) { event in
             EventDetailView(event: event)
+                .interactiveDismissDisabled()
         }
     }
 
@@ -58,7 +63,6 @@ struct CalendarView: View {
 
             Spacer()
 
-            // Month navigation
             HStack(spacing: 6) {
                 navButton(systemImage: "chevron.left", enabled: vm.canGoBack) {
                     vm.goToPreviousMonth()
@@ -73,7 +77,6 @@ struct CalendarView: View {
 
             Spacer()
 
-            // Add button
             Button {
                 vm.selectedDate = nil
                 vm.showingAddEvent = true
@@ -82,6 +85,7 @@ struct CalendarView: View {
                     .font(.title2)
                     .foregroundColor(AppColors.accent)
             }
+            .accessibilityLabel("Add Event")
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
@@ -111,3 +115,4 @@ struct CalendarView: View {
         .disabled(!enabled)
     }
 }
+

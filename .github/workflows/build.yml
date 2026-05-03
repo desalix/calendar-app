@@ -1,0 +1,87 @@
+name: UI Tests & Screenshots
+
+on:
+  push:
+    branches: [main, "claude/**"]
+  pull_request:
+
+jobs:
+  ui-tests:
+    name: UI Tests & Screenshots
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          gem install xcpretty --quiet
+          brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Find iPhone 16 simulator
+        run: |
+          UDID=$(xcrun simctl list devices available -j | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          found = None
+          for runtime, devices in data['devices'].items():
+              if 'iOS' not in runtime:
+                  continue
+              for d in devices:
+                  if not d.get('isAvailable', False):
+                      continue
+                  if d['name'] == 'iPhone 16':
+                      found = d['udid']
+                      break
+                  elif 'iPhone' in d['name'] and found is None:
+                      found = d['udid']
+          print(found or '')
+          sys.exit(0 if found else 1)
+          ")
+          echo "SIM_UDID=$UDID" >> $GITHUB_ENV
+          echo "Simulator: $UDID"
+
+      - name: Boot simulator
+        run: |
+          xcrun simctl boot "$SIM_UDID" 2>/dev/null || true
+          xcrun simctl bootstatus "$SIM_UDID" -b
+
+      - name: Run UI tests
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -scheme Atlas \
+            -sdk iphonesimulator \
+            -destination "id=$SIM_UDID" \
+            -derivedDataPath DerivedData \
+            -resultBundlePath TestResults.xcresult \
+            -only-testing:AtlasUITests \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty
+        # Continue even if tests fail so we still get whatever screenshots were taken
+        continue-on-error: true
+
+      - name: List screenshots
+        run: |
+          echo "--- Screenshots written by tests ---"
+          find /tmp/atlas-screenshots -name "*.png" 2>/dev/null | sort || echo "(none)"
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-screenshots
+          path: /tmp/atlas-screenshots/
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Upload test results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults.xcresult/
+          retention-days: 7

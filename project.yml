@@ -28,3 +28,37 @@ targets:
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
         CURRENT_PROJECT_VERSION: 1
         MARKETING_VERSION: "1.0"
+
+  AtlasUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: AtlasUITests
+    settings:
+      base:
+        TEST_TARGET_NAME: Atlas
+        PRODUCT_BUNDLE_IDENTIFIER: com.desalix.AtlasUITests
+    dependencies:
+      - target: Atlas
+
+schemes:
+  Atlas:
+    build:
+      targets:
+        Atlas: [run, test, profile, analyze, archive]
+        AtlasUITests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - name: AtlasUITests
+          parallelizable: false
+          randomExecutionOrder: false
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release

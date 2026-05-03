@@ -70,6 +70,7 @@ struct ChatView: View {
                 .background(Color(UIColor.systemGray6))
                 .cornerRadius(22)
                 .lineLimit(1...6)
+                .accessibilityIdentifier("messageInput")
 
             Button {
                 vm.send(context: modelContext)
@@ -81,6 +82,7 @@ struct ChatView: View {
                                      : AppColors.accent)
             }
             .disabled(vm.inputText.isEmpty || vm.isLoading)
+            .accessibilityLabel("Send")
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
