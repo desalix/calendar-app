@@ -27,6 +27,14 @@ struct SettingsView: View {
                         label: "Colors"
                     )
                 }
+
+                NavigationLink(destination: AISettingsView()) {
+                    settingsRow(
+                        icon: "cpu.fill",
+                        color: Color.teal,
+                        label: "AI"
+                    )
+                }
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)

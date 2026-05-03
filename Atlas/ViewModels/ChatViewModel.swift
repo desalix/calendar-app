@@ -5,10 +5,7 @@ import SwiftData
 final class ChatViewModel {
 
     var inputText: String = ""
-    var isLoading: Bool = false
-
-    // MARK: - Send message
-    // Inserts the user message, calls AIService, then inserts the AI response.
+    var isLoading: Bool   = false
 
     func send(context: ModelContext) {
         let text = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -17,17 +14,22 @@ final class ChatViewModel {
         inputText = ""
         isLoading = true
 
+        // Insert the user message first so it's included in the history snapshot
         let userMsg = ChatMessage(content: text, isUser: true)
         context.insert(userMsg)
 
-        // Fetch all events so the AI service can reason about the calendar
-        let allEvents = (try? context.fetch(FetchDescriptor<Event>())) ?? []
+        let descriptor = FetchDescriptor<ChatMessage>(sortBy: [SortDescriptor(\.timestamp)])
+        let history    = (try? context.fetch(descriptor)) ?? []
+        let allEvents  = (try? context.fetch(FetchDescriptor<Event>())) ?? []
 
         Task {
-            let reply = await AIService.shared.respond(to: text, events: allEvents, context: context)
+            let reply = await AIService.shared.respond(
+                history:  history,
+                events:   allEvents,
+                context:  context
+            )
             await MainActor.run {
-                let aiMsg = ChatMessage(content: reply, isUser: false)
-                context.insert(aiMsg)
+                context.insert(ChatMessage(content: reply, isUser: false))
                 self.isLoading = false
             }
         }

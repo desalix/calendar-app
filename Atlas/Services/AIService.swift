@@ -1,154 +1,131 @@
 import Foundation
 import SwiftData
 
-// MARK: ─────────────────────────────────────────────────────────────────────
-// AI SERVICE
-//
-// Placeholder implementation.
-// Replace the body of `callModel(messages:)` with a real API call
-// (e.g. Anthropic Claude, OpenAI) to activate the assistant.
-//
-// The `respond(to:events:context:)` method already:
-//   • builds a calendar context string from all events
-//   • passes it as a system message so the model can read the DB
-//   • exposes `context` so helper methods can create / edit / delete events
-// ─────────────────────────────────────────────────────────────────────────
-
 final class AIService {
 
     static let shared = AIService()
     private init() {}
 
-    // MARK: - Public entry point
+    // MARK: - Entry point
 
-    func respond(to userMessage: String, events: [Event], context: ModelContext) async -> String {
-        let systemPrompt = buildSystemPrompt(events: events)
-        let messages: [[String: String]] = [
-            ["role": "system",    "content": systemPrompt],
-            ["role": "user",      "content": userMessage]
+    func respond(history: [ChatMessage], events: [Event], context: ModelContext) async -> String {
+        guard let apiKey = KeychainHelper.apiKey, !apiKey.trimmingCharacters(in: .whitespaces).isEmpty else {
+            return "No API key configured. Go to Settings → AI and paste your Gemini API key."
+        }
+        return await callGemini(history: history, events: events, apiKey: apiKey)
+    }
+
+    // MARK: - Gemini API
+
+    private func callGemini(history: [ChatMessage], events: [Event], apiKey: String) async -> String {
+        let endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=\(apiKey)"
+        guard let url = URL(string: endpoint) else { return "Configuration error." }
+
+        let body: [String: Any] = [
+            "system_instruction": [
+                "parts": [["text": buildSystemPrompt(events: events)]]
+            ],
+            "contents": history.map { msg -> [String: Any] in
+                ["role":  msg.isUser ? "user" : "model",
+                 "parts": [["text": msg.content]]]
+            },
+            "generationConfig": [
+                "maxOutputTokens": 400,
+                "temperature":     0.3
+            ]
         ]
 
-        // TODO: replace with real model call
-        return await callModel(messages: messages, context: context)
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            if let http = response as? HTTPURLResponse, http.statusCode != 200 {
+                let raw = String(data: data, encoding: .utf8) ?? ""
+                if http.statusCode == 400 { return "Invalid API key or request." }
+                if http.statusCode == 429 { return "Rate limit reached. Try again in a moment." }
+                return "API error \(http.statusCode): \(raw.prefix(120))"
+            }
+
+            return parseResponse(data) ?? "The model returned an empty response."
+        } catch {
+            return "Network error: \(error.localizedDescription)"
+        }
     }
 
-    // MARK: - Model call (stub → replace)
-
-    /// Replace this method body with your actual API request.
-    /// `context` is passed through so the model can call helper methods
-    /// to create, update or delete calendar entries.
-    private func callModel(messages: [[String: String]], context: ModelContext) async -> String {
-        // ── PLACEHOLDER ──────────────────────────────────────────────────
-        // Simulate a short network delay so the typing indicator is visible.
-        try? await Task.sleep(nanoseconds: 600_000_000)
-        return "Chat works properly, this is a test."
-        // ─────────────────────────────────────────────────────────────────
-
-        // TODO: real implementation example (Anthropic Claude):
-        //
-        // guard let url = URL(string: "https://api.anthropic.com/v1/messages") else {
-        //     return "Configuration error."
-        // }
-        // var request = URLRequest(url: url)
-        // request.httpMethod = "POST"
-        // request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "x-api-key")
-        // request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        // request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
-        //
-        // let body: [String: Any] = [
-        //     "model": "claude-sonnet-4-6",
-        //     "max_tokens": 1024,
-        //     "system": messages.first(where: { $0["role"] == "system" })?["content"] ?? "",
-        //     "messages": messages.filter { $0["role"] != "system" }
-        // ]
-        // request.httpBody = try? JSONSerialization.data(withJSONObject: body)
-        // let (data, _) = try await URLSession.shared.data(for: request)
-        // // parse response…
+    private func parseResponse(_ data: Data) -> String? {
+        guard
+            let json       = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let candidates = json["candidates"] as? [[String: Any]],
+            let content    = candidates.first?["content"] as? [String: Any],
+            let parts      = content["parts"] as? [[String: Any]],
+            let text       = parts.first?["text"] as? String
+        else { return nil }
+        return text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    // MARK: - System prompt builder
+    // MARK: - System prompt
 
     private func buildSystemPrompt(events: [Event]) -> String {
-        let cal = Calendar.current
-        let fmt = DateFormatter()
-        fmt.dateStyle = .medium
-        fmt.timeStyle = .short
+        let dateFmt = DateFormatter()
+        dateFmt.dateStyle = .medium
+        dateFmt.timeStyle = .short
 
-        var lines = [
-            "You are Atlas, a personal calendar assistant.",
-            "Today is \(fmt.string(from: Date())).",
-            "",
-            "The user's upcoming calendar entries (next 60 days):"
-        ]
+        let cal      = Calendar.current
+        let today    = cal.startOfDay(for: Date())
+        let in60days = Date().addingTimeInterval(60 * 86_400)
 
-        let upcoming = events.filter {
-            $0.date >= cal.startOfDay(for: Date()) &&
-            $0.date <= Date().addingTimeInterval(60 * 86_400)
-        }
-        .sorted { $0.date < $1.date }
+        // Build calendar data block
+        let upcoming = events
+            .filter { $0.date >= today && $0.date <= in60days }
+            .sorted { $0.date < $1.date }
 
+        var calendarLines: [String]
         if upcoming.isEmpty {
-            lines.append("  (none)")
+            calendarLines = ["(no entries in the next 60 days)"]
         } else {
-            for ev in upcoming {
-                var line = "• \(fmt.string(from: ev.date)) — \(ev.displayTitle)"
-                if let subject = ev.subjectName { line += " (\(subject))" }
-                if let earnings = ev.earnings    { line += " [€\(String(format: "%.0f", earnings))]" }
-                lines.append(line)
+            calendarLines = upcoming.map { ev in
+                var line = "• \(dateFmt.string(from: ev.date)) — \(ev.displayTitle)"
+                if let subject  = ev.subjectName { line += " [\(subject)]" }
+                if let earnings = ev.earnings    { line += " [€\(String(format: "%.2f", earnings))]" }
+                if ev.hasRopero  { line += " [Ropero]" }
+                if ev.hasPostres { line += " [Postres]" }
+                return line
             }
         }
 
-        lines += [
-            "",
-            "Answer helpfully and concisely. You can reference the calendar entries above.",
-            "Do not invent entries that are not listed."
-        ]
+        let calendarData = calendarLines.joined(separator: "\n")
+        let todayStr     = dateFmt.string(from: Date())
 
-        return lines.joined(separator: "\n")
-    }
+        return """
+        You are Atlas, a personal calendar secretary app. Your sole purpose is to help the user manage their schedule and income — nothing else.
 
-    // MARK: - DB helpers (called when AI is wired up with function-calling)
+        ## Hard rules (never break these)
+        - You are a SECRETARY. Refuse any request outside calendar, scheduling, or income topics. If asked, say: "I'm only here to help with your calendar and income."
+        - Only do exactly what is asked. Do not volunteer, create, suggest, or produce anything beyond the direct answer.
+        - If the user asks HOW to do something, explain it. Do not do it for them unless they explicitly say "do it", "add it", "create it", "edit it", etc.
+        - Never assume intent. If unclear, ask one short clarifying question.
 
-    func createEvent(
-        category: EventCategory,
-        date: Date,
-        schoolSubType: SchoolSubType? = nil,
-        subjectName: String? = nil,
-        workSubType: WorkSubType? = nil,
-        startTime: Date? = nil,
-        endTime: Date? = nil,
-        time: Date? = nil,
-        hourlyRate: Double? = nil,
-        title: String? = nil,
-        notes: String? = nil,
-        context: ModelContext
-    ) -> Event {
-        let event = Event(category: category, date: date, notes: notes)
-        event.schoolSubType = schoolSubType
-        event.subjectName   = subjectName
-        event.workSubType   = workSubType
-        event.startTime     = startTime
-        event.endTime       = endTime
-        event.time          = time
-        event.hourlyRate    = hourlyRate
-        event.title         = title
-        context.insert(event)
-        return event
-    }
+        ## What you can do
+        - Read, summarize, and answer questions about the user's calendar events.
+        - Add, edit, or delete events when explicitly instructed.
+        - Calculate and report income from work entries (basketball, football, paid events).
+        - Answer scheduling questions ("am I free on Thursday?", "what do I have this week?").
 
-    func updateEvent(_ event: Event, date: Date? = nil, notes: String? = nil, time: Date? = nil) {
-        if let d = date  { event.date  = d }
-        if let n = notes { event.notes = n }
-        if let t = time  { event.time  = t }
-    }
+        ## Response style
+        - Be extremely concise. One to three sentences maximum unless a list is genuinely needed.
+        - Never explain what you're about to do — just do it.
+        - Never add filler phrases ("Great question!", "Of course!", "Sure!").
+        - If the answer is a number or a yes/no, lead with that.
 
-    func deleteEvent(_ event: Event, context: ModelContext) {
-        NotificationService.shared.cancelNotifications(for: event)
-        context.delete(event)
-    }
+        ## Context
+        Today is \(todayStr).
+        The user's calendar entries for the next 60 days:
 
-    func queryEvents(on date: Date, from events: [Event]) -> [Event] {
-        let cal = Calendar.current
-        return events.filter { cal.isDate($0.date, inSameDayAs: date) }
+        \(calendarData)
+        """
     }
 }
