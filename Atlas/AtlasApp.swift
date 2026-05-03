@@ -4,6 +4,7 @@ import SwiftData
 @main
 struct AtlasApp: App {
 
+    @StateObject private var theme = ColorTheme()
     let modelContainer: ModelContainer
 
     init() {
@@ -32,6 +33,7 @@ struct AtlasApp: App {
             ContentView()
                 .modelContainer(modelContainer)
                 .preferredColorScheme(.light)
+                .environmentObject(theme)
         }
     }
 

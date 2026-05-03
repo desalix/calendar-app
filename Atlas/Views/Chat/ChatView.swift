@@ -6,6 +6,7 @@ struct ChatView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \ChatMessage.timestamp) private var messages: [ChatMessage]
 
+    @EnvironmentObject var theme: ColorTheme
     @State private var vm = ChatViewModel()
 
     var body: some View {
@@ -15,7 +16,7 @@ struct ChatView: View {
                 Divider()
                 inputBar
             }
-            .background(AppColors.background)
+            .background(theme.background)
             .navigationTitle("Atlas AI")
             .navigationBarTitleDisplayMode(.large)
         }
@@ -79,7 +80,7 @@ struct ChatView: View {
                     .font(.system(size: 32))
                     .foregroundColor(vm.inputText.isEmpty || vm.isLoading
                                      ? .gray.opacity(0.4)
-                                     : AppColors.accent)
+                                     : theme.accent)
             }
             .disabled(vm.inputText.isEmpty || vm.isLoading)
             .accessibilityLabel("Send")
@@ -116,7 +117,7 @@ struct ChatView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
-            .background(AppColors.aiBubble)
+            .background(theme.aiBubble)
             .cornerRadius(18)
             Spacer()
         }
@@ -127,6 +128,7 @@ struct ChatView: View {
 
 struct ChatBubbleView: View {
 
+    @EnvironmentObject var theme: ColorTheme
     let message: ChatMessage
 
     var body: some View {
@@ -137,7 +139,7 @@ struct ChatBubbleView: View {
                 .font(.body)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
-                .background(message.isUser ? AppColors.userBubble : AppColors.aiBubble)
+                .background(message.isUser ? theme.userBubble : theme.aiBubble)
                 .foregroundColor(message.isUser ? .white : .primary)
                 .cornerRadius(18)
 

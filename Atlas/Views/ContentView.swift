@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
 
+    @EnvironmentObject var theme: ColorTheme
     @State private var selectedTab = 0
 
     private let tabs: [(label: String, icon: String)] = [
@@ -37,7 +38,7 @@ struct ContentView: View {
                             Text(tabs[i].label)
                                 .font(.caption2)
                         }
-                        .foregroundColor(selectedTab == i ? AppColors.accent : Color(UIColor.systemGray))
+                        .foregroundColor(selectedTab == i ? theme.accent : Color(UIColor.systemGray))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
                     }

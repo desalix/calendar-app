@@ -3,6 +3,7 @@ import SwiftData
 
 struct AddEventView: View {
 
+    @EnvironmentObject var theme: ColorTheme
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss)      private var dismiss
     @Query(sort: \Subject.name)  private var subjects: [Subject]
@@ -134,7 +135,7 @@ struct AddEventView: View {
                         Text(subject.name).foregroundColor(.primary)
                         Spacer()
                         if selectedSubject == subject.name {
-                            Image(systemName: "checkmark").foregroundColor(AppColors.accent)
+                            Image(systemName: "checkmark").foregroundColor(theme.accent)
                         }
                     }
                 }
@@ -145,14 +146,14 @@ struct AddEventView: View {
                     TextField("Subject name", text: $newSubjectName)
                     Button("Add") { commitNewSubject() }
                         .disabled(newSubjectName.trimmingCharacters(in: .whitespaces).isEmpty)
-                        .foregroundColor(AppColors.accent)
+                        .foregroundColor(theme.accent)
                 }
             } else {
                 Button {
                     showNewSubjectField = true
                 } label: {
                     Label("New Subject", systemImage: "plus.circle.fill")
-                        .foregroundColor(AppColors.accent)
+                        .foregroundColor(theme.accent)
                 }
             }
         }
@@ -174,13 +175,13 @@ struct AddEventView: View {
             Section("Tags") {
                 Toggle(isOn: $hasRopero) {
                     HStack(spacing: 8) {
-                        Circle().fill(AppColors.roperoTag).frame(width: 10, height: 10)
+                        Circle().fill(theme.roperoTag).frame(width: 10, height: 10)
                         Text("Ropero")
                     }
                 }
                 Toggle(isOn: $hasPostres) {
                     HStack(spacing: 8) {
-                        Circle().fill(AppColors.postresTag).frame(width: 10, height: 10)
+                        Circle().fill(theme.postresTag).frame(width: 10, height: 10)
                         Text("Postres")
                     }
                 }

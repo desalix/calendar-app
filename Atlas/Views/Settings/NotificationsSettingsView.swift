@@ -30,6 +30,7 @@ struct NotificationsSettingsView: View {
 
 struct NotificationRowView: View {
 
+    @EnvironmentObject var theme: ColorTheme
     @Bindable var config: NotificationConfig
 
     var body: some View {
@@ -40,7 +41,7 @@ struct NotificationRowView: View {
                 Spacer()
                 Toggle("", isOn: $config.isEnabled)
                     .labelsHidden()
-                    .tint(AppColors.accent)
+                    .tint(theme.accent)
             }
 
             if config.isEnabled {
@@ -50,7 +51,7 @@ struct NotificationRowView: View {
                     }
                 }
                 .pickerStyle(.menu)
-                .tint(AppColors.accent)
+                .tint(theme.accent)
                 .padding(.leading, -8)
             }
         }

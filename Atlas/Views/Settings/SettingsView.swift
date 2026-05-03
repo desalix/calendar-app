@@ -19,6 +19,14 @@ struct SettingsView: View {
                         label: "Notifications"
                     )
                 }
+
+                NavigationLink(destination: ColorsSettingsView()) {
+                    settingsRow(
+                        icon: "paintpalette.fill",
+                        color: Color.purple,
+                        label: "Colors"
+                    )
+                }
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
