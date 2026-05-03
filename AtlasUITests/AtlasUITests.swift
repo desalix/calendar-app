@@ -49,9 +49,9 @@ final class AtlasUITests: XCTestCase {
         btn.tap()
     }
 
-    // Tab bar tap via synthesized coordinate — avoids AXScrollToVisibleAction failures.
+    // Tab bar tap — finds the custom tab button by accessibility label.
     private func tapTab(_ label: String) {
-        let btn = app.tabBars.firstMatch.buttons[label]
+        let btn = app.buttons[label]
         guard btn.waitForExistence(timeout: 3) else { return }
         btn.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
     }

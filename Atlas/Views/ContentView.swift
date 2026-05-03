@@ -1,22 +1,53 @@
 import SwiftUI
 
 struct ContentView: View {
+
+    @State private var selectedTab = 0
+
+    private let tabs: [(label: String, icon: String)] = [
+        ("Calendar", "calendar"),
+        ("Chat",     "bubble.left.and.bubble.right"),
+        ("Income",   "eurosign.circle"),
+        ("Settings", "gearshape"),
+    ]
+
     var body: some View {
-        TabView {
-            CalendarView()
-                .tabItem { Label("Calendar", systemImage: "calendar") }
+        VStack(spacing: 0) {
 
-            ChatView()
-                .tabItem { Label("Chat", systemImage: "bubble.left.and.bubble.right") }
+            // ── Content area — fills all space between top and bottom bar ──
+            Group {
+                switch selectedTab {
+                case 0: CalendarView()
+                case 1: ChatView()
+                case 2: IncomeView()
+                default: SettingsView()
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            IncomeView()
-                .tabItem { Label("Income", systemImage: "eurosign.circle") }
+            // ── Bottom bar ─────────────────────────────────────────────────
+            Divider()
 
-            SettingsView()
-                .tabItem { Label("Settings", systemImage: "gearshape") }
+            HStack(spacing: 0) {
+                ForEach(tabs.indices, id: \.self) { i in
+                    Button { selectedTab = i } label: {
+                        VStack(spacing: 3) {
+                            Image(systemName: tabs[i].icon)
+                                .font(.system(size: 22))
+                            Text(tabs[i].label)
+                                .font(.caption2)
+                        }
+                        .foregroundColor(selectedTab == i ? AppColors.accent : Color(UIColor.systemGray))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                    }
+                    .accessibilityLabel(tabs[i].label)
+                }
+            }
+            .background(
+                Color(UIColor.secondarySystemBackground)
+                    .ignoresSafeArea(edges: .bottom)
+            )
         }
-        .tint(AppColors.accent)
-        .toolbarBackground(Color(UIColor.secondarySystemBackground), for: .tabBar)
-        .toolbarBackground(.visible, for: .tabBar)
     }
 }
