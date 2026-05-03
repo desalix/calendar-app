@@ -6,12 +6,13 @@ struct EventDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss)      private var dismiss
 
+    @EnvironmentObject var theme: ColorTheme
     let event: Event
 
     @State private var showingEdit   = false
     @State private var showingDelete = false
 
-    private var color: Color { AppColors.color(for: event.eventColor) }
+    private var color: Color { theme.color(for: event.eventColor) }
 
     private let dateFmt: DateFormatter = {
         let f = DateFormatter(); f.dateStyle = .long; return f
@@ -86,8 +87,8 @@ struct EventDetailView: View {
                             Divider()
                             VStack(alignment: .leading, spacing: 8) {
                                 sectionLabel("Tags")
-                                if event.hasRopero  { tagRow("Ropero",  AppColors.roperoTag)  }
-                                if event.hasPostres { tagRow("Postres", AppColors.postresTag) }
+                                if event.hasRopero  { tagRow("Ropero",  theme.roperoTag)  }
+                                if event.hasPostres { tagRow("Postres", theme.postresTag) }
                             }
                         }
 
@@ -105,7 +106,7 @@ struct EventDetailView: View {
                     .padding(20)
                 }
             }
-            .background(AppColors.background)
+            .background(theme.background)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -142,7 +143,7 @@ struct EventDetailView: View {
     private func row(icon: String, label: String, value: String) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
-                .foregroundColor(AppColors.accent)
+                .foregroundColor(theme.accent)
                 .frame(width: 20)
             VStack(alignment: .leading, spacing: 2) {
                 Text(label).font(.caption).foregroundColor(.secondary)

@@ -3,9 +3,10 @@ import SwiftUI
 /// Compact colored pill shown inside each calendar day cell.
 struct EventCellView: View {
 
+    @EnvironmentObject var theme: ColorTheme
     let event: Event
 
-    private var color: Color { AppColors.color(for: event.eventColor) }
+    private var color: Color { theme.color(for: event.eventColor) }
 
     private var timeText: String? {
         let f = DateFormatter()
@@ -47,8 +48,8 @@ struct EventCellView: View {
             // Basketball tag dots
             if event.workSubType == .basketball, event.hasRopero || event.hasPostres {
                 HStack(spacing: 3) {
-                    if event.hasRopero  { tagDot(AppColors.roperoTag) }
-                    if event.hasPostres { tagDot(AppColors.postresTag) }
+                    if event.hasRopero  { tagDot(theme.roperoTag) }
+                    if event.hasPostres { tagDot(theme.postresTag) }
                 }
             }
         }

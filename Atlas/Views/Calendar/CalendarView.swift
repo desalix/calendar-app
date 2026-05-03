@@ -6,6 +6,7 @@ struct CalendarView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var allEvents: [Event]
 
+    @EnvironmentObject var theme: ColorTheme
     @State private var vm = CalendarViewModel()
 
     private let weekHeaders = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -83,7 +84,7 @@ struct CalendarView: View {
             } label: {
                 Image(systemName: "plus.circle.fill")
                     .font(.title2)
-                    .foregroundColor(AppColors.accent)
+                    .foregroundColor(theme.accent)
             }
             .accessibilityLabel("Add Event")
         }
@@ -109,7 +110,7 @@ struct CalendarView: View {
         Button(action: action) {
             Image(systemName: systemImage)
                 .font(.caption.bold())
-                .foregroundColor(enabled ? AppColors.accent : .gray.opacity(0.35))
+                .foregroundColor(enabled ? theme.accent : .gray.opacity(0.35))
                 .frame(width: 28, height: 28)
         }
         .disabled(!enabled)

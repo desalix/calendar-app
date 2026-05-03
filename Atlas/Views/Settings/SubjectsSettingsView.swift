@@ -3,6 +3,7 @@ import SwiftData
 
 struct SubjectsSettingsView: View {
 
+    @EnvironmentObject var theme: ColorTheme
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Subject.name)  private var subjects: [Subject]
     @Query private var allEvents: [Event]
@@ -19,7 +20,7 @@ struct SubjectsSettingsView: View {
                     // Subjects logo icon
                     Image(systemName: "book.closed.fill")
                         .font(.caption)
-                        .foregroundColor(AppColors.accent)
+                        .foregroundColor(theme.accent)
                         .frame(width: 20)
 
                     Text(subject.name)
@@ -41,7 +42,7 @@ struct SubjectsSettingsView: View {
                         .onSubmit { commitAdd() }
                     Button("Add", action: commitAdd)
                         .disabled(newName.trimmingCharacters(in: .whitespaces).isEmpty)
-                        .foregroundColor(AppColors.accent)
+                        .foregroundColor(theme.accent)
                 }
             }
         }
@@ -54,7 +55,7 @@ struct SubjectsSettingsView: View {
                     if !showingAdd { newName = "" }
                 } label: {
                     Image(systemName: showingAdd ? "xmark.circle.fill" : "plus.circle.fill")
-                        .foregroundColor(AppColors.accent)
+                        .foregroundColor(theme.accent)
                 }
             }
         }

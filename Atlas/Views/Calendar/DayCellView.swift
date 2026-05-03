@@ -4,6 +4,7 @@ struct DayCellView: View {
 
     let date: Date
     let events: [Event]
+    @EnvironmentObject var theme: ColorTheme
     let isToday: Bool
     let onTapEvent: (Event) -> Void
     let onTapDay: (Date) -> Void
@@ -23,7 +24,7 @@ struct DayCellView: View {
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(isToday ? .white : .primary)
                     .frame(width: 22, height: 22)
-                    .background(isToday ? AppColors.accent : Color.clear)
+                    .background(isToday ? theme.accent : Color.clear)
                     .clipShape(Circle())
                     .padding(.leading, 4)
                 Spacer()

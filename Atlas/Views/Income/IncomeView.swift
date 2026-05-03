@@ -3,6 +3,7 @@ import SwiftData
 
 struct IncomeView: View {
 
+    @EnvironmentObject var theme: ColorTheme
     @Query private var allEvents: [Event]
     @State private var currentMonth: Date = Date()
 
@@ -44,7 +45,7 @@ struct IncomeView: View {
                 }
                 .padding(16)
             }
-            .background(AppColors.background)
+            .background(theme.background)
             .navigationTitle("Income")
             .navigationBarTitleDisplayMode(.large)
         }
@@ -116,7 +117,7 @@ struct IncomeView: View {
         Button(action: action) {
             Image(systemName: icon)
                 .font(.title3.bold())
-                .foregroundColor(enabled ? AppColors.accent : .gray.opacity(0.3))
+                .foregroundColor(enabled ? theme.accent : .gray.opacity(0.3))
         }
         .disabled(!enabled)
     }
@@ -126,9 +127,10 @@ struct IncomeView: View {
 
 struct IncomeEntryRow: View {
 
+    @EnvironmentObject var theme: ColorTheme
     let event: Event
 
-    private var color: Color   { AppColors.color(for: event.eventColor) }
+    private var color: Color   { theme.color(for: event.eventColor) }
     private var earnings: String {
         guard let e = event.earnings else { return "—" }
         return String(format: "%.2f €", e)
